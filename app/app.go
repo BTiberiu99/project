@@ -1,50 +1,49 @@
 package app
 
 import (
-	"flag"
 	"fmt"
-	"os"
-	"project/alg"
+	"project/problem/puzzle"
+	"strings"
+
+	"github.com/leaanthony/mewn"
+	"github.com/wailsapp/wails"
 )
 
 func Start() {
 
-	algFlag := *flag.String("alg", "bfs", "Accepted algoritms are bfs and dfs")
+	js := mewn.String("./frontend/dist/app.js")
+	css := mewn.String("./frontend/dist/app.css")
 
-	nrGen := *flag.Uint("gen", 0, "Number of auto genereated configurations")
+	app := wails.CreateApp(&wails.AppConfig{
+		Width:     1024,
+		Height:    768,
+		Title:     "Puzzle 8",
+		JS:        js,
+		CSS:       css,
+		Colour:    "#131313",
+		Resizable: true,
+	})
+	app.Bind(TakeMoves)
+	app.Run()
 
-	fileName := *flag.String("file", "", "File that has config file")
+}
 
-	flag.Parse()
-
-	required := []string{"gen", "file"}
-
-	if nrGen == 0 && fileName == "" {
-		fmt.Fprintf(os.Stderr, "missing required `-%s` or `-%s` argument/flag\n", required[0], required[1])
-		os.Exit(2) // the same exit code flag.Parse uses
+func TakeMoves(alg, configs string) []*puzzle.Config {
+	p, err := puzzle.NewPuzzle(&puzzle.ConfigPuzzle{
+		Reader: strings.NewReader(configs),
+	})
+	fmt.Println(alg, "\n", configs)
+	if err != nil {
+		return make([]*puzzle.Config, 0)
 	}
 
-	var algoritm alg.Algoritm
-
-	switch algFlag {
+	switch alg {
 	case "bfs":
-		algoritm = alg.BFS{}
+
+		return p.BFS()
 	case "dfs":
-		algoritm = alg.DFS{}
+		return p.DFS()
+	default:
+		return make([]*puzzle.Config, 0)
 	}
-
-	if nrGen != 0 {
-		RunAuto(algoritm, nrGen)
-	} else {
-		Run(algoritm, fileName)
-	}
-
-}
-
-func Run(algoritm alg.Algoritm, fileName string) {
-
-}
-
-func RunAuto(algoritm alg.Algoritm, nr uint) {
-
 }

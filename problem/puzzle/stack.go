@@ -5,8 +5,11 @@ type Stack struct {
 }
 
 func (l *Stack) Pop() *Config {
+
 	var c *Config
+
 	c, l.configs = l.configs[len(l.configs)-1], l.configs[:len(l.configs)-1]
+
 	return c
 }
 

@@ -1,12 +1,18 @@
 package puzzle
 
 import (
+	"encoding/json"
 	"fmt"
-	"sync"
+)
+
+const (
+	Up    = 1
+	Down  = 2
+	Left  = 3
+	Right = 4
 )
 
 type Config struct {
-	sync.Mutex
 	mat              [][]int8
 	i, j             *int
 	neighbors        []*Config
@@ -15,6 +21,21 @@ type Config struct {
 	Explored         bool
 	key              *string
 	ReverseNeighbors bool
+	Move             int
+}
+
+func (c Config) MarshalJSON() ([]byte, error) {
+	j, err := json.Marshal(struct {
+		Matrix [][]int8
+		Move   int
+	}{
+		Matrix: c.mat,
+		Move:   c.Move,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return j, nil
 }
 
 func NewConfig(m [][]int8) *Config {
@@ -191,24 +212,28 @@ func (c *Config) Neighbors() []*Config {
 	if cU != nil {
 		cU.parent = c
 		cU.Depth++
+		cU.Move = Up
 		neighbors = append(neighbors, cU)
 	}
 
 	if cD != nil {
 		cD.parent = c
 		cD.Depth++
+		cD.Move = Down
 		neighbors = append(neighbors, cD)
 	}
 
 	if cL != nil {
 		cL.parent = c
 		cL.Depth++
+		cL.Move = Left
 		neighbors = append(neighbors, cL)
 	}
 
 	if cR != nil {
 		cR.parent = c
 		cR.Depth++
+		cR.Move = Right
 		neighbors = append(neighbors, cR)
 	}
 

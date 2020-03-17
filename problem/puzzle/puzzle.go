@@ -19,13 +19,27 @@ type Puzzle struct {
 	MaxDepth int
 }
 
-func NewPuzzle(file io.Reader) (*Puzzle, error) {
+type ConfigPuzzle struct {
+	Reader io.Reader
+	Intial *Config
+	Final  *Config
+}
+
+func NewPuzzle(c *ConfigPuzzle) (*Puzzle, error) {
 	puzzle := &Puzzle{}
 
-	err := puzzle.FromFile(file)
+	if c.Intial != nil && c.Final != nil {
+		puzzle.intial = c.Intial
+		puzzle.final = c.Final
+	} else if c.Reader != nil {
+		err := puzzle.FromFile(c.Reader)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		return nil, errors.New("No Intial& Config matrix or Reader ")
 	}
 
 	return puzzle, nil
