@@ -20,7 +20,7 @@ const opts = { theme: { dark: false } }
 var vuetify = new Vuetify(opts)
 Vue.config.productionTip = false
 Vue.config.devtools = true
-
+// Vue.config.performance = true;
 var cApp = null
 
 function transform (call) {
@@ -31,16 +31,18 @@ function transform (call) {
 			transformedArguments.push(typeof arguments[i] === 'object' ? JSON.stringify(arguments[i]) : arguments[i])
 		}
 
-		console.log('SEND ==>', transformedArguments)
+		// console.log('SEND ==>', transformedArguments)
 		var response = await call(...transformedArguments)
 		try {
 			if (typeof response === 'string') {
 				response = JSON.parse(response)
 			}
-			console.log('RECEIVE <==', response)
+			// console.log('RECEIVE <==', response)
 
 			return response
-		} catch (e) { console.log(e) }
+		} catch (e) { 
+			//console.log(e)
+		 }
 
 		return false
 	}

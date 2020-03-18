@@ -51,24 +51,25 @@
              ></v-select>
             </v-col>
          
-             <v-col cols="12" v-if="moves.length" class="Puzzle">
+             <v-col cols="12" v-if="movesLength" class="Puzzle">
                Steps
              </v-col>
             <v-col cols="12" style="height:100%;" class="Puzzle">
                  <v-row  style="height:100%;">
                   <v-col v-for="(matrix,index1) in list"  :key="index1" class="Puzzle" cols="12">
                     <template v-for="(move,index) in matrix" keep-alive>
-                      <Puzzle  :config="move.item" :key="(index1 * matrix.length + index) + 'puzzle'" />
-                      <span v-if="move.index  !== moves.length - 1" :key="(index1 * matrix.length + index)" class="Puzzle__arrow">===>></span>
+                      <Puzzle  v-if="move" :config="move.item" :key="(index1 * matrix.length + index) + 'puzzle'" />
+                      <span v-if=" move && move.index  !== movesLength - 1" :key="(index1 * matrix.length + index)" class="Puzzle__arrow">===>></span>
                     </template>
                   </v-col>
                  </v-row>
             </v-col>
-            <v-col v-if="Math.floor(moves.length / pageSize)" cols="12" style="text-align:center;">
+            <v-col v-if="Math.floor(movesLength / pageSize)" cols="12" style="text-align:center;">
               <v-pagination
               v-model="page"
-              :length="Math.ceil(moves.length / pageSize)"
+              :length="Math.ceil(movesLength / pageSize)"
               total-visible="20"
+              :disabled="isLoadingPage"
             ></v-pagination>
             </v-col>
 
@@ -95,15 +96,27 @@ export default {
     props: {
       source: String
     },
+    computed:{
+      
+    },
+    watch:{
+      page(newValue,oldValue){
+        if(newValue != oldValue){
+          this.takePage()
+        }
+      }
+    },
     data: () => ({
       isLoading:false,
+      isLoadingPage:false,
       drawer: false,
-      moves:[],
       index:0,
       page:1,
       pageSize:15,
+      movesLength:0,
       algoritm:'bfs',
       stateInfinite:{},
+      list:[],
       final:{
         Move:0,
         Matrix:[
@@ -132,25 +145,9 @@ export default {
       ]
     }),
 
-    computed:{
-      list(){
-        var items = []
-        let i = 0
-        for(;i<this.pageSize;i++){
-          if((this.page - 1) * this.pageSize + i === this.moves.length){
-            break
-          }
-          if(typeof items[Math.floor(i/5)] === 'undefined' ){
-            items[Math.floor(i/5)]=[]
-          }
-          items[Math.floor(i/5)].push({
-            index:(this.page - 1) * this.pageSize + i,
-            item:this.moves[(this.page - 1) * this.pageSize + i]
-          })
-        }
-        return items
-      }
-    },
+ 
+
+    
 
     mounted(){
 
@@ -197,15 +194,29 @@ export default {
         if(!this.validate()) return
         this.isLoading = true
         try {
-          const moves = await this.$backend.TakeMoves(this.algoritm,this.getMatrixes())
+          const length = await this.$backend.TakeMoves(this.algoritm,this.getMatrixes())
           this.index = 0
-        
-          this.moves = moves
+          this.page = 1
+          this.movesLength  = length
           // this.infiniteHandler()
+          this.takePage()
+
         }catch(e){
           console.log(e)
         }
         this.isLoading = false
+      },
+      async takePage(){
+      
+        if(this.isLoadingPage) return
+          this.isLoadingPage = true
+        try{
+
+          this.list = await this.$backend.Page(this.page,this.pageSize)
+
+        }catch(e){}
+
+        this.isLoadingPage = false
       }
     },
     

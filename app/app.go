@@ -15,35 +15,68 @@ func Start() {
 	css := mewn.String("./frontend/dist/app.css")
 
 	app := wails.CreateApp(&wails.AppConfig{
-		Width:     1024,
+		Width:     1200,
 		Height:    768,
-		Title:     "Puzzle 8",
+		Title:     "8 Puzzle",
 		JS:        js,
 		CSS:       css,
 		Colour:    "#131313",
 		Resizable: true,
 	})
 	app.Bind(TakeMoves)
+	app.Bind(Page)
 	app.Run()
 
 }
 
-func TakeMoves(alg, configs string) []*puzzle.Config {
+var (
+	items    []*puzzle.Config
+	lenItems int
+)
+
+func TakeMoves(alg, configs string) int {
 	p, err := puzzle.NewPuzzle(&puzzle.ConfigPuzzle{
 		Reader: strings.NewReader(configs),
 	})
 	fmt.Println(alg, "\n", configs)
 	if err != nil {
-		return make([]*puzzle.Config, 0)
+		return 0
 	}
 
 	switch alg {
 	case "bfs":
 
-		return p.BFS()
+		items = p.BFS()
 	case "dfs":
-		return p.DFS()
+		items = p.DFS()
 	default:
-		return make([]*puzzle.Config, 0)
+		items = make([]*puzzle.Config, 0)
+
 	}
+	lenItems = len(items)
+	return lenItems
+}
+
+func Page(page, perPage int) [][]interface{} {
+	m := make([][]interface{}, perPage/5)
+
+	if items != nil {
+
+		for i := 0; i < perPage; i++ {
+
+			if (page-1)*perPage+i >= lenItems-1 {
+				break
+			}
+			if m[i/5] == nil {
+				m[i/5] = make([]interface{}, 5)
+			}
+
+			m[i/5][i%5] = map[string]interface{}{
+				"item":  items[(page-1)*perPage+i],
+				"index": i,
+			}
+		}
+
+	}
+	return m
 }
