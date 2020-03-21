@@ -31,7 +31,6 @@ func (p *Puzzle) Generate(nr int) {
 			p.generated = append(p.generated, puzzle)
 		} else {
 			noLoop++
-
 		}
 
 		if noLoop > 20000 {
@@ -45,7 +44,11 @@ func (p *Puzzle) nextPuzzle() (*puzzle.Puzzle, error) {
 
 	initial := p.config()
 	final := p.config()
-
+	count := 0
+	for !initial.IsSolvable() && count < 3000 {
+		initial = p.config()
+		count++
+	}
 	return puzzle.NewPuzzle(&puzzle.ConfigPuzzle{
 		Intial: initial,
 		Final:  final,
@@ -104,4 +107,10 @@ func (p *Puzzle) Rand() *rand.Rand {
 		p.rand = rand.New(rand.NewSource(time.Now().Unix()))
 	}
 	return p.rand
+}
+
+func (p *Puzzle) Statistics() {
+	for i := range p.generated {
+
+	}
 }

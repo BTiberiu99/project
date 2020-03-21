@@ -28,6 +28,10 @@
       input:{
         type:Boolean,
         default:false
+      },
+      isInitial:{
+        type:Boolean,
+        default:false
       }
     },
     data () {
@@ -51,7 +55,7 @@
     methods: {
       validate(){
        var missing = []
-        
+        this.message = ''
         for (let i=0;i<9;i++){
           if(!this.isNumberInMatrix(i)){
             missing.push(i.toString())
@@ -63,13 +67,50 @@
         }else {
           this.message = ''
         }
+
+      
+
+        if(!this.message && this.isInitial){
+          if(!this.IsSolvable()){
+            this.message = 'Matrix is not solveable'
+          }
+         
+        }
      
         return missing.length === 0
+      },
+
+       getInvCountFinal()  {
+          var invCount = 0
+          const m = this.config.Matrix
+
+          const len = m.length * m[0].length
+          for (let i = 0; i < len - 1; i++) {
+            for(let j = i + 1; j < len; j++) {
+
+              var a = Math.floor(j/m.length),
+                  b = Math.floor(j%m.length),
+                  c = Math.floor(i/m.length),
+                  d = Math.floor(i%m.length);
+              if (m[a][b] != 0 && m[c][d] != 0&&
+                m[c][d] > m[a][b]) {
+                invCount++
+              }
+            }
+          }
+          console.log(invCount)
+          return invCount
+        },
+
+      IsSolvable()  {
+
+        return this.getInvCountFinal()%2 == 0
       },
       matrixToString(){
         let i=0,j=0
         var str = ""
         const m = this.config.Matrix
+        console.log(m)
         for(;i<m.length;i++){
           for (j=0;j<m[i].length;j++){
             str += m[i][j] + " "

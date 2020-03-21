@@ -1,27 +1,7 @@
 <template>
   <v-app id="inspire">
-    <!-- <v-navigation-drawer v-model="drawer" clipped fixed app>
-      <v-list dense>
-        <v-list-item>
-          <v-list-item-icon>
-            <v-icon>mdi-view-dashboard</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Dashboard</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item>
-          <v-list-item-icon>
-            <v-icon>mdi-settings</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Settings</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer> -->
+ 
     <v-app-bar app fixed clipped-left>
-      <!-- <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon> -->
       <v-toolbar-title>8 Puzzle</v-toolbar-title>
     </v-app-bar>
     <v-content>
@@ -29,7 +9,7 @@
         <v-layout justify-center align-center class="px-0"  style="height:90%;">
           <v-row  style="height:100%;">
             <v-col cols="12" class="Puzzle">
-              <Puzzle ref="intial" class="Puzzle__intial" :config="intial" input/>
+              <Puzzle ref="initial" class="Puzzle__initial" :config="initial" is-initial input/>
               <span class="Puzzle__arrow">===>></span>
               <Puzzle ref="final" class="Puzzle__final" :config="final" input/>
               
@@ -39,8 +19,11 @@
               <v-btn :disabled="isLoading" :loading="isLoading" style="display:block;"  @click="takeMoves">
                 Calculate steps
               </v-btn> 
-              <v-btn style="margin-left:30px;display:block;" @click="cheat">
+              <v-btn  :disabled="isLoading" :loading="isLoading" style="margin-left:30px;display:block;" @click="cheat">
                Cheat
+              </v-btn> 
+              <v-btn :disabled="isLoading" :loading="isLoading"  style="margin-left:30px;display:block;" @click="takeStats">
+               Stats
               </v-btn> 
 
               <v-select
@@ -74,6 +57,34 @@
             </v-col>
 
           </v-row>
+
+          <v-dialog
+            v-model="dialog"
+            width="700"
+            style="padding:20px;"
+            disable-pagination
+          >
+           
+      
+            <v-card>
+               <v-data-table
+                :headers="headers"
+                :items="stats"
+                :disable-pagination="true"
+                class="elevation-1"
+              ></v-data-table>
+                <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                  color="primary"
+                  text
+                  @click="dialog = false"
+                >
+                 Close
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
           
         </v-layout>
       </v-container>
@@ -109,14 +120,31 @@ export default {
     data: () => ({
       isLoading:false,
       isLoadingPage:false,
-      drawer: false,
-      index:0,
+  
+
       page:1,
       pageSize:15,
       movesLength:0,
-      algoritm:'bfs',
-      stateInfinite:{},
+      dialog:false,
+
+
+      algoritm:'astar',
+ 
       list:[],
+
+      stats:[],
+      headers: [
+        {
+          text: 'Algoritm',
+          align: 'start',
+          value: 'algoritm',
+        },
+        { text: 'Timp de lucru', value: 'running_time' },
+        { text: 'Numarul de stari vizitate', value: 'visited_configs' },
+        { text: 'Adancime stare finala', value: 'final_depth' },
+        { text: 'Consume memorie', value: 'memory_usage' },
+      ],
+
       final:{
         Move:0,
         Matrix:[
@@ -125,7 +153,7 @@ export default {
           [0,0,0]
         ]
       },
-      intial:{
+      initial:{
           Move:0,
           Matrix:[
             [0,0,0],
@@ -133,6 +161,8 @@ export default {
             [0,0,0]
           ]
       },
+
+
       items:[
         {
           text:'Breadth First Search',
@@ -141,13 +171,13 @@ export default {
         {
           text:'Depth First Search',
           value:'dfs'
+        },
+        {
+          text:'AStar',
+          value:'astar'
         }
       ]
     }),
-
- 
-
-    
 
     mounted(){
 
@@ -155,11 +185,12 @@ export default {
       window.cheat = function(){
           _vm.cheat()
       }
+      this.cheat()
     },
     methods:{
 
       cheat(){
-        this.intial = {
+        this.initial = {
           Move:0,
           Matrix:[
             [1,2,3],
@@ -178,31 +209,30 @@ export default {
         }
       },  
       getMatrixes(){
-        const intial = this.$refs.intial.matrixToString()
+        const initial = this.$refs.initial.matrixToString()
         const final = this.$refs.final.matrixToString()
-        return  intial + "\n" + final
+        return  initial + "\n" + final
       },
 
       validate(){
-        const intialValid = this.$refs.intial.validate()
+        const initialValid = this.$refs.initial.validate()
         const finalValid = this.$refs.final.validate()
-        return  intialValid && finalValid 
+        return  initialValid && finalValid 
       },
 
       async takeMoves(){
-        if(this.isLoading) return
-        if(!this.validate()) return
+        if(this.isLoading || !this.validate()) return
         this.isLoading = true
         try {
           const length = await this.$backend.TakeMoves(this.algoritm,this.getMatrixes())
-          this.index = 0
+
           this.page = 1
           this.movesLength  = length
           // this.infiniteHandler()
           this.takePage()
 
         }catch(e){
-          console.log(e)
+          this.length = 0
         }
         this.isLoading = false
       },
@@ -214,9 +244,25 @@ export default {
 
           this.list = await this.$backend.Page(this.page,this.pageSize)
 
-        }catch(e){}
+        }catch(e){
+          this.list = []
+        }
 
         this.isLoadingPage = false
+      },
+      async takeStats(){
+        if(this.isLoading || !this.validate()) return
+        this.isLoading = true
+        try {
+          const stats = await this.$backend.Stats(this.getMatrixes())
+
+          this.stats = stats
+
+          this.dialog = true
+        }catch(e){
+          this.stats = []
+        }
+        this.isLoading = false
       }
     },
     
@@ -230,7 +276,7 @@ export default {
     align-items: center;
     justify-content: center;
 
-    &__intial {
+    &__initial {
       display: inline-block
     }
 

@@ -62,6 +62,7 @@ Wails.Init(() => {
 			render: h => h(App)
 		}).$mount('#app')
 	} else {
+		location.reload()
 		cApp.$root.$emit(WAILSINIT)
 	}
 })

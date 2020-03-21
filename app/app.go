@@ -1,8 +1,8 @@
 package app
 
 import (
-	"fmt"
 	"project/problem/puzzle"
+	"project/utils"
 	"strings"
 
 	"github.com/leaanthony/mewn"
@@ -23,6 +23,7 @@ func Start() {
 		Colour:    "#131313",
 		Resizable: true,
 	})
+	app.Bind(Stats)
 	app.Bind(TakeMoves)
 	app.Bind(Page)
 	app.Run()
@@ -38,33 +39,53 @@ func TakeMoves(alg, configs string) int {
 	p, err := puzzle.NewPuzzle(&puzzle.ConfigPuzzle{
 		Reader: strings.NewReader(configs),
 	})
-	fmt.Println(alg, "\n", configs)
+
 	if err != nil {
 		return 0
 	}
+	utils.Timeit(alg, func() {
+		switch alg {
+		case "bfs":
 
-	switch alg {
-	case "bfs":
+			items = p.BFS()
 
-		items = p.BFS()
-	case "dfs":
-		items = p.DFS()
-	default:
-		items = make([]*puzzle.Config, 0)
+		case "dfs":
+			items = p.DFS()
 
-	}
+		case "astar":
+
+			items = p.AStar()
+
+		default:
+			items = make([]*puzzle.Config, 0)
+
+		}
+	})
+
 	lenItems = len(items)
 	return lenItems
+}
+
+func Stats(configs string) []puzzle.Stats {
+	p, err := puzzle.NewPuzzle(&puzzle.ConfigPuzzle{
+		Reader: strings.NewReader(configs),
+	})
+
+	if err != nil {
+		return []puzzle.Stats{}
+	}
+
+	return p.Statistics()
 }
 
 func Page(page, perPage int) [][]interface{} {
 	m := make([][]interface{}, perPage/5)
 
 	if items != nil {
-
+		var index int
 		for i := 0; i < perPage; i++ {
-
-			if (page-1)*perPage+i >= lenItems-1 {
+			index = (page-1)*perPage + i
+			if index >= lenItems {
 				break
 			}
 			if m[i/5] == nil {
@@ -72,8 +93,8 @@ func Page(page, perPage int) [][]interface{} {
 			}
 
 			m[i/5][i%5] = map[string]interface{}{
-				"item":  items[(page-1)*perPage+i],
-				"index": i,
+				"item":  items[index],
+				"index": index,
 			}
 		}
 

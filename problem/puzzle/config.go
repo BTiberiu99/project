@@ -18,6 +18,8 @@ type Config struct {
 	neighbors        []*Config
 	parent           *Config
 	Depth            int
+	Cost             float64
+	HKey             float64
 	Explored         bool
 	key              *string
 	ReverseNeighbors bool
@@ -50,7 +52,50 @@ func (c *Config) Len() int {
 	return len(c.mat)
 }
 
+func (c *Config) getInvCountFinal() int {
+	invCount := 0
+	lenC := c.Len() * c.Len()
+	for i := 0; i < lenC-1; i++ {
+		for j := i + 1; j < lenC; j++ {
+
+			a, b := c.mat[j/c.Len()][j%c.Len()], c.mat[i/c.Len()][i%c.Len()]
+			if a != 0 &&
+				b != 0 &&
+				b > a {
+				invCount++
+			}
+		}
+	}
+	return invCount
+}
+
+func (c *Config) IsSolvable() bool {
+
+	return c.getInvCountFinal()%2 == 0
+}
+
+func (c *Config) Less(c2 *Config) bool {
+
+	if c.key != nil && c2.key != nil {
+		return *c.key < *c2.key
+	}
+
+	for i := range c.mat {
+		for j := range c.mat[i] {
+			if c.mat[i][j] < c2.mat[i][j] {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func (c *Config) IsSame(c2 *Config) bool {
+	if c.key != nil && c2.key != nil {
+		return *c.key == *c2.key
+	}
+
 	if len(c.mat) != len(c2.mat) {
 		return false
 	}
@@ -110,6 +155,7 @@ func (c *Config) Copy() *Config {
 	return &Config{
 		mat:              m,
 		Depth:            c.Depth,
+		Cost:             c.Cost,
 		i:                &i,
 		j:                &j,
 		ReverseNeighbors: c.ReverseNeighbors,
@@ -212,6 +258,7 @@ func (c *Config) Neighbors() []*Config {
 	if cU != nil {
 		cU.parent = c
 		cU.Depth++
+		cU.Cost++
 		cU.Move = Up
 		neighbors = append(neighbors, cU)
 	}
@@ -219,6 +266,7 @@ func (c *Config) Neighbors() []*Config {
 	if cD != nil {
 		cD.parent = c
 		cD.Depth++
+		cD.Cost++
 		cD.Move = Down
 		neighbors = append(neighbors, cD)
 	}
@@ -226,6 +274,7 @@ func (c *Config) Neighbors() []*Config {
 	if cL != nil {
 		cL.parent = c
 		cL.Depth++
+		cL.Cost++
 		cL.Move = Left
 		neighbors = append(neighbors, cL)
 	}
@@ -233,6 +282,7 @@ func (c *Config) Neighbors() []*Config {
 	if cR != nil {
 		cR.parent = c
 		cR.Depth++
+		cR.Cost++
 		cR.Move = Right
 		neighbors = append(neighbors, cR)
 	}
@@ -249,6 +299,7 @@ func (c *Config) Neighbors() []*Config {
 }
 
 func (c *Config) Key() string {
+
 	if c.key != nil {
 		return *c.key
 	}
