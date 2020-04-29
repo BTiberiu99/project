@@ -1,4 +1,4 @@
-#AI PROJECT
-  - BFS
-  - DFS
-  - AStar
+# AI PROJECT
+ - BFS
+ - DFS
+ - AStar
