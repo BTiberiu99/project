@@ -183,6 +183,7 @@ func (p *Puzzle) H(c *Config) float64 {
 		//Final board
 		add(i, int(p.final.mat[i/lenSide][i%lenSide]), 1)
 	}
+
 	for i := range help {
 
 		if i == 0 {

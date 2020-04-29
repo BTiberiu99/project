@@ -9,6 +9,7 @@
         <v-layout justify-center align-center class="px-0"  style="height:90%;">
           <v-row  style="height:100%;">
             <v-col cols="12" class="Puzzle">
+
               <Puzzle ref="initial" class="Puzzle__initial" :config="initial" is-initial input/>
               <span class="Puzzle__arrow">===>></span>
               <Puzzle ref="final" class="Puzzle__final" :config="final" input/>

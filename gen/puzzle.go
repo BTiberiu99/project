@@ -110,7 +110,7 @@ func (p *Puzzle) Rand() *rand.Rand {
 }
 
 func (p *Puzzle) Statistics() {
-	for i := range p.generated {
+	// for i := range p.generated {
 
-	}
+	// }
 }

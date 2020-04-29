@@ -63,6 +63,7 @@ func TakeMoves(alg, configs string) int {
 	})
 
 	lenItems = len(items)
+
 	return lenItems
 }
 
